@@ -126,7 +126,7 @@
    CONFIG — paste your Apps Script Web app URL below
    ========================================================= */
 const CONFIG = {
-  WEBHOOK_URL: "https://script.google.com/macros/s/AKfycbwHLvVzWPBSQ3bDjBOX_NGaRP-_i0UHXvlIKu_IbNJFGU4xUKbWScJvlr8pqw7B7Gru8Q/exec",
+  WEBHOOK_URL: "PASTE_YOUR_WEB_APP_URL_HERE",
   POLL_MS: 15000,
 };
 
@@ -189,8 +189,18 @@ async function apiGetAll() {
   if (!CONFIG.WEBHOOK_URL || CONFIG.WEBHOOK_URL.indexOf("PASTE_YOUR") === 0) {
     throw new Error("no-webhook");
   }
-  const res = await fetch(CONFIG.WEBHOOK_URL + "?action=getAll");
-  const json = await res.json();
+  let res;
+  try {
+    res = await fetch(CONFIG.WEBHOOK_URL + "?action=getAll");
+  } catch (networkErr) {
+    throw new Error("Network/CORS error reaching Apps Script: " + networkErr.message);
+  }
+  let json;
+  try {
+    json = await res.json();
+  } catch (parseErr) {
+    throw new Error("Server didn't return JSON (HTTP " + res.status + "). It may be asking you to sign in — check deployment access is set to Anyone.");
+  }
   if (json.error) throw new Error(json.error);
   return json;
 }
@@ -199,11 +209,21 @@ async function apiCall(action, payload) {
   if (!CONFIG.WEBHOOK_URL || CONFIG.WEBHOOK_URL.indexOf("PASTE_YOUR") === 0) {
     throw new Error("no-webhook");
   }
-  const res = await fetch(CONFIG.WEBHOOK_URL, {
-    method: "POST",
-    body: JSON.stringify({ action, payload }),
-  });
-  const json = await res.json();
+  let res;
+  try {
+    res = await fetch(CONFIG.WEBHOOK_URL, {
+      method: "POST",
+      body: JSON.stringify({ action, payload }),
+    });
+  } catch (networkErr) {
+    throw new Error("Network/CORS error reaching Apps Script: " + networkErr.message);
+  }
+  let json;
+  try {
+    json = await res.json();
+  } catch (parseErr) {
+    throw new Error("Server didn't return JSON (HTTP " + res.status + "). It may be asking you to sign in — check deployment access is set to Anyone.");
+  }
   if (json.error) throw new Error(json.error);
   return json;
 }
@@ -227,11 +247,7 @@ async function syncFromServer(showSpinner) {
     state.lastSynced = new Date();
     cacheLocally(fresh);
   } catch (e) {
-    if (e.message === "no-webhook") {
-      state.error = "no-webhook";
-    } else {
-      state.error = "Could not reach Google Sheets. Showing your last synced data.";
-    }
+    state.error = e.message === "no-webhook" ? "no-webhook" : e.message;
   } finally {
     state.syncing = false;
     render();
@@ -248,7 +264,7 @@ async function mutate(action, payload, optimisticFn) {
     state.lastSynced = new Date();
     cacheLocally(fresh);
   } catch (e) {
-    state.error = e.message === "no-webhook" ? "no-webhook" : "Change saved on this device, but couldn't sync yet.";
+    state.error = e.message === "no-webhook" ? "no-webhook" : "Saved on this device, but sync failed: " + e.message;
   }
   render();
 }
