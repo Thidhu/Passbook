@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Passbook</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --ink: #F4F1E8;
+    --ink-soft: rgba(244,241,232,0.66);
+    --ink-faint: rgba(244,241,232,0.42);
+    --base: #0C1220;
+    --base-2: #10192C;
+    --glass: rgba(255,255,255,0.055);
+    --glass-strong: rgba(255,255,255,0.10);
+    --line: rgba(255,255,255,0.14);
+    --indigo: #96A6FF;
+    --indigo-soft: rgba(150,166,255,0.16);
+    --indigo-glow: rgba(120,140,255,0.35);
+    --jade: #6BD9A8;
+    --jade-soft: rgba(107,217,168,0.14);
+    --jade-glow: rgba(90,210,160,0.30);
+    --rust: #FF9B76;
+    --rust-soft: rgba(255,155,118,0.16);
+    --marigold: #FFCB6B;
+    --marigold-soft: rgba(255,203,107,0.16);
+    --marigold-glow: rgba(255,200,100,0.30);
+    --serif: 'Fraunces', ui-serif, Georgia, serif;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 15% -5%, rgba(150,166,255,0.22) 0%, transparent 40%),
+      radial-gradient(circle at 90% 8%, rgba(107,217,168,0.16) 0%, transparent 42%),
+      radial-gradient(circle at 30% 95%, rgba(255,155,118,0.14) 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(255,203,107,0.10) 0%, transparent 40%),
+      linear-gradient(160deg, var(--base) 0%, var(--base-2) 100%);
+    background-attachment: fixed;
+  }
+  #app { max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; padding-bottom: 8px; }
+  input, select, button { font-family: var(--sans); }
+  input::placeholder { color: var(--ink-faint); }
+  select option { background: #16213A; color: var(--ink); }
+  .card {
+    background: var(--glass);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.06);
+    margin-bottom: 16px;
+  }
+  .section-title { font-family: var(--serif); font-weight: 500; font-size: 15px; margin-bottom: 10px; }
+  .input {
+    padding: 9px 10px; border-radius: 8px; border: 1px solid var(--line); font-size: 14px;
+    background: rgba(255,255,255,0.05); color: var(--ink); width: 100%; box-sizing: border-box;
+  }
+  .btn-primary {
+    padding: 9px 16px; border-radius: 8px; border: 1px solid rgba(150,166,255,0.4);
+    background: linear-gradient(160deg, rgba(150,166,255,0.9), rgba(120,140,255,0.75));
+    color: #101430; font-weight: 600; font-size: 14px; cursor: pointer;
+    box-shadow: 0 4px 16px var(--indigo-glow);
+  }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .link-btn { background: none; border: none; color: var(--indigo); font-weight: 600; font-size: 13px; text-decoration: underline; cursor: pointer; padding: 0; }
+  .icon-btn { background: none; border: none; cursor: pointer; color: var(--ink-faint); display: flex; }
+  .toggle-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .toggle-btn {
+    flex: 1; padding: 7px 0; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12.5px;
+    border: 1px solid var(--line); background: transparent; color: var(--ink-soft);
+  }
+  .toggle-btn.active { border-color: var(--indigo); background: var(--indigo-soft); color: var(--indigo); }
+  .chip {
+    padding: 7px 11px; border-radius: 20px; border: 1px solid var(--line);
+    background: var(--glass-strong); color: var(--ink); font-size: 12.5px; cursor: pointer;
+  }
+  .navbar {
+    position: sticky; bottom: 0; background: var(--glass); backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%); border-top: 1px solid var(--line);
+    display: flex; margin-top: 8px;
+  }
+  .nav-item {
+    flex: 1; padding: 10px 0 8px; background: none; border: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--ink-faint); position: relative;
+  }
+  .nav-item.active { color: var(--indigo); font-weight: 600; }
+  .nav-item.active::before {
+    content: ""; position: absolute; top: -1px; width: 28px; height: 2px; border-radius: 2px;
+    background: var(--indigo); box-shadow: 0 0 8px var(--indigo-glow);
+  }
+  .header {
+    position: relative; padding: 20px 20px 26px;
+    background: linear-gradient(160deg, rgba(255,255,255,0.09), rgba(255,255,255,0.02));
+    backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border-bottom: 1px solid var(--line); box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+  .nav-chip {
+    background: var(--glass-strong); border: 1px solid var(--line); backdrop-filter: blur(10px);
+    border-radius: 10px; color: var(--ink); padding: 7px; cursor: pointer; display: flex;
+  }
+  .pill { border-radius: 20px; padding: 5px 12px; display: flex; align-items: center; gap: 5px; font-size: 13px; }
+  .pill.jade { background: var(--jade-soft); border: 1px solid rgba(107,217,168,0.35); color: var(--jade); }
+  .pill.rust { background: var(--rust-soft); border: 1px solid rgba(255,155,118,0.35); color: var(--rust); }
+  .mono { font-family: ui-monospace, SFMono-Regular, monospace; }
+  .banner {
+    padding: 10px 20px; font-size: 13px; display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--line); background: var(--rust-soft); color: var(--rust);
+  }
+  .content { padding: 20px 20px 8px; }
+  ::-webkit-scrollbar { width: 0; height: 0; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =========================================================
+   CONFIG — paste your Apps Script Web app URL below
+   ========================================================= */
+const CONFIG = {
+  WEBHOOK_URL: "PASTE_YOUR_WEB_APP_URL_HERE",
+  POLL_MS: 15000,
+};
+
+const EXPENSE_CATEGORIES = ["Food", "Rent", "Transport", "Utilities", "Mobile & Internet", "Family support", "Entertainment", "Savings", "Other"];
+const INCOME_CATEGORIES = ["Salary", "Other income"];
+const FLAG_COLORS = ["#96A6FF", "#6BD9A8", "#FFCB6B", "#FF9B76", "#B8A6E8"];
+const LOCAL_CACHE_KEY = "passbook-cache-v1";
+
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+const todayStr = () => new Date().toISOString().slice(0, 10);
+const fmt = (n) => "Nu. " + Math.round(n || 0).toLocaleString("en-IN");
+const monthKey = (d) => (d || todayStr()).slice(0, 7);
+const monthLabel = (key) => {
+  const [y, m] = key.split("-");
+  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+};
+const addMonths = (key, n) => {
+  const [y, m] = key.split("-").map(Number);
+  const d = new Date(y, m - 1 + n, 1);
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+};
+const daysUntil = (dateStr) => {
+  const a = new Date(todayStr()); const b = new Date(dateStr);
+  return Math.round((b - a) / 86400000);
+};
+const escapeHtml = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let state = {
+  data: { transactions: [], reminders: [], budgets: {}, savingsTarget: 0 },
+  tab: "dashboard",
+  viewMonth: monthKey(todayStr()),
+  loading: true,
+  syncing: false,
+  lastSynced: null,
+  error: null,
+  notifPermission: typeof Notification !== "undefined" ? Notification.permission : "unsupported",
+  ui: {
+    quickType: "expense",
+    quickAmount: "",
+    justLogged: null,
+    addType: "expense",
+    addAmount: "",
+    addCategory: EXPENSE_CATEGORIES[0],
+    addNote: "",
+    addDate: todayStr(),
+    targetEditing: false,
+    targetInput: "",
+    reminderFormOpen: false,
+    remTitle: "",
+    remAmount: "",
+    remDueDate: todayStr(),
+    remRecurring: true,
+  },
+};
+
+const notified = new Set();
+
+// ---------- networking ----------
+async function apiGetAll() {
+  if (!CONFIG.WEBHOOK_URL || CONFIG.WEBHOOK_URL.indexOf("PASTE_YOUR") === 0) {
+    throw new Error("no-webhook");
+  }
+  const res = await fetch(CONFIG.WEBHOOK_URL + "?action=getAll");
+  const json = await res.json();
+  if (json.error) throw new Error(json.error);
+  return json;
+}
+
+async function apiCall(action, payload) {
+  if (!CONFIG.WEBHOOK_URL || CONFIG.WEBHOOK_URL.indexOf("PASTE_YOUR") === 0) {
+    throw new Error("no-webhook");
+  }
+  const res = await fetch(CONFIG.WEBHOOK_URL, {
+    method: "POST",
+    body: JSON.stringify({ action, payload }),
+  });
+  const json = await res.json();
+  if (json.error) throw new Error(json.error);
+  return json;
+}
+
+function cacheLocally(data) {
+  try { localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(data)); } catch (e) {}
+}
+function readLocalCache() {
+  try {
+    const raw = localStorage.getItem(LOCAL_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+async function syncFromServer(showSpinner) {
+  if (showSpinner) { state.syncing = true; render(); }
+  try {
+    const fresh = await apiGetAll();
+    state.data = fresh;
+    state.error = null;
+    state.lastSynced = new Date();
+    cacheLocally(fresh);
+  } catch (e) {
+    if (e.message === "no-webhook") {
+      state.error = "no-webhook";
+    } else {
+      state.error = "Could not reach Google Sheets. Showing your last synced data.";
+    }
+  } finally {
+    state.syncing = false;
+    render();
+  }
+}
+
+async function mutate(action, payload, optimisticFn) {
+  optimisticFn();
+  render();
+  try {
+    const fresh = await apiCall(action, payload);
+    state.data = fresh;
+    state.error = null;
+    state.lastSynced = new Date();
+    cacheLocally(fresh);
+  } catch (e) {
+    state.error = e.message === "no-webhook" ? "no-webhook" : "Change saved on this device, but couldn't sync yet.";
+  }
+  render();
+}
+
+// ---------- mutations ----------
+function addTransaction(tx) {
+  const withId = { ...tx, id: uid() };
+  mutate("addTransaction", withId, () => {
+    state.data.transactions.push(withId);
+  });
+}
+function deleteTransaction(id) {
+  mutate("deleteTransaction", { id }, () => {
+    state.data.transactions = state.data.transactions.filter((t) => t.id !== id);
+  });
+}
+function addReminder(rem) {
+  const withId = { ...rem, id: uid(), paid: false };
+  mutate("addReminder", withId, () => {
+    state.data.reminders.push(withId);
+  });
+}
+function deleteReminder(id) {
+  mutate("deleteReminder", { id }, () => {
+    state.data.reminders = state.data.reminders.filter((r) => r.id !== id);
+  });
+}
+function togglePaid(id) {
+  mutate("toggleReminderPaid", { id }, () => {
+    const r = state.data.reminders.find((x) => x.id === id);
+    if (r) r.paid = !r.paid;
+  });
+}
+function setBudget(category, amount) {
+  mutate("setBudget", { category, amount }, () => {
+    state.data.budgets[category] = amount;
+  });
+}
+function setSavingsTarget(amount) {
+  mutate("setSavingsTarget", { amount }, () => {
+    state.data.savingsTarget = amount;
+  });
+}
+function resetAll() {
+  mutate("resetAll", {}, () => {
+    state.data = { transactions: [], reminders: [], budgets: {}, savingsTarget: 0 };
+  });
+}
+
+// ---------- ICS export ----------
+function buildICS(reminders) {
+  const pad = (n) => String(n).padStart(2, "0");
+  const stamp = () => {
+    const d = new Date();
+    return d.getUTCFullYear() + pad(d.getUTCMonth() + 1) + pad(d.getUTCDate()) + "T" + pad(d.getUTCHours()) + pad(d.getUTCMinutes()) + pad(d.getUTCSeconds()) + "Z";
+  };
+  const asDate = (dateStr) => dateStr.replace(/-/g, "");
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Passbook//Reminders//EN", "CALSCALE:GREGORIAN"];
+  reminders.filter((r) => !r.paid).forEach((r) => {
+    lines.push(
+      "BEGIN:VEVENT", "UID:" + r.id + "@passbook", "DTSTAMP:" + stamp(),
+      "DTSTART;VALUE=DATE:" + asDate(r.dueDate),
+      "SUMMARY:" + (r.amount > 0 ? r.title + " (" + fmt(r.amount) + ") due" : r.title + " due"),
+      "DESCRIPTION:Bill reminder from Passbook",
+      "BEGIN:VALARM", "TRIGGER:-P1D", "ACTION:DISPLAY", "DESCRIPTION:Reminder", "END:VALARM",
+      "BEGIN:VALARM", "TRIGGER:PT9H", "ACTION:DISPLAY", "DESCRIPTION:Reminder", "END:VALARM",
+      "END:VEVENT"
+    );
+  });
+  lines.push("END:VCALENDAR");
+  return lines.join("\r\n");
+}
+function downloadICS(reminders) {
+  const ics = buildICS(reminders);
+  const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "bill-reminders.ics";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+async function requestNotif() {
+  if (typeof Notification === "undefined") return;
+  state.notifPermission = await Notification.requestPermission();
+  render();
+}
+function checkDueNotifications() {
+  if (state.notifPermission !== "granted") return;
+  state.data.reminders.forEach((r) => {
+    if (r.paid) return;
+    const d = daysUntil(r.dueDate);
+    if (d <= 0 && !notified.has(r.id)) {
+      notified.add(r.id);
+      try {
+        new Notification("Bill due: " + r.title, { body: fmt(r.amount) + (d < 0 ? " is overdue" : " is due today") });
+      } catch (e) {}
+    }
+  });
+}
+
+// ---------- derived data ----------
+function getMonthTx() {
+  return state.data.transactions.filter((t) => monthKey(t.date) === state.viewMonth);
+}
+function getByCategory(monthTx) {
+  const m = {};
+  monthTx.filter((t) => t.type === "expense").forEach((t) => { m[t.category] = (m[t.category] || 0) + t.amount; });
+  return Object.entries(m).sort((a, b) => b[1] - a[1]);
+}
+function getTotalSaved() {
+  return state.data.transactions.filter((t) => t.category === "Savings").reduce((s, t) => s + t.amount, 0);
+}
+function getDueSoon() {
+  return state.data.reminders.filter((r) => !r.paid && daysUntil(r.dueDate) <= 3).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+}
+
+// ---------- render ----------
+function render() {
+  const app = document.getElementById("app");
+  const monthTx = getMonthTx();
+  const income = monthTx.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0);
+  const expense = monthTx.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+  const balance = income - expense;
+  const dueSoon = getDueSoon();
+
+  if (state.loading) {
+    app.innerHTML = '<div style="padding:3rem;text-align:center;color:#8A93A8;">Opening your passbook...</div>';
+    return;
+  }
+
+  let banner = "";
+  if (state.error === "no-webhook") {
+    banner = '<div class="banner"><span>Set your Apps Script URL in CONFIG.WEBHOOK_URL at the top of this file to enable syncing. Working from local cache only for now.</span></div>';
+  } else if (state.error) {
+    banner = '<div class="banner"><span>' + escapeHtml(state.error) + "</span></div>";
+  }
+
+  const dueBanner = (dueSoon.length > 0 && state.tab !== "reminders")
+    ? '<div class="banner"><span>' + dueSoon.length + " bill" + (dueSoon.length > 1 ? "s" : "") + ' due soon or overdue. <button class="link-btn" id="review-bills" style="margin-left:4px;color:var(--rust);">Review</button></span></div>'
+    : "";
+
+  app.innerHTML =
+    renderHeader(income, expense, balance) +
+    banner + dueBanner +
+    '<div class="content">' + renderTabContent(monthTx, balance) + "</div>" +
+    renderNavBar() +
+    '<div style="padding:0 20px 16px;text-align:center;background:var(--glass);backdrop-filter:blur(20px);">' +
+      '<button id="reset-btn" style="background:none;border:none;color:var(--ink-faint);font-size:12px;cursor:pointer;padding:10px 0 0;">Reset all data</button>' +
+      (state.lastSynced ? '<div style="font-size:11px;color:var(--ink-faint);margin-top:6px;">Last synced ' + state.lastSynced.toLocaleTimeString() + "</div>" : "") +
+    "</div>";
+
+  attachHandlers(monthTx);
+  checkDueNotifications();
+}
+
+function renderHeader(income, expense, balance) {
+  return (
+    '<div class="header">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">' +
+        '<button class="nav-chip" id="month-prev">&#8592;</button>' +
+        '<div style="font-family:var(--serif);font-size:16px;font-weight:500;">' + monthLabel(state.viewMonth) + "</div>" +
+        '<button class="nav-chip" id="month-next">&#8594;</button>' +
+      "</div>" +
+      '<div style="font-family:var(--serif);font-size:12px;color:var(--ink-soft);margin-bottom:4px;">Balance remaining</div>' +
+      '<div class="mono" style="font-size:38px;font-weight:600;color:' + (balance < 0 ? "var(--rust)" : "var(--ink)") + ';">' + fmt(balance) + "</div>" +
+      '<div style="display:flex;gap:10px;margin-top:14px;">' +
+        '<div class="pill jade">In <span class="mono" style="font-weight:600;">' + fmt(income) + "</span></div>" +
+        '<div class="pill rust">Out <span class="mono" style="font-weight:600;">' + fmt(expense) + "</span></div>" +
+      "</div>" +
+    "</div>"
+  );
+}
+
+function renderNavBar() {
+  const items = [
+    { id: "dashboard", label: "Home" },
+    { id: "add", label: "Add" },
+    { id: "budgets", label: "Budgets" },
+    { id: "reminders", label: "Bills" },
+  ];
+  return '<div class="navbar">' + items.map((it) =>
+    '<button class="nav-item ' + (state.tab === it.id ? "active" : "") + '" data-tab="' + it.id + '">' +
+      "<span>" + it.label + "</span>" +
+    "</button>"
+  ).join("") + "</div>";
+}
+
+function renderTabContent(monthTx, balance) {
+  if (state.tab === "dashboard") return renderDashboard(monthTx);
+  if (state.tab === "add") return renderAddEntry();
+  if (state.tab === "budgets") return renderBudgets();
+  if (state.tab === "reminders") return renderReminders();
+  return "";
+}
+
+function renderDashboard(monthTx) {
+  const byCategory = getByCategory(monthTx);
+  const maxCat = byCategory.length ? byCategory[0][1] : 1;
+  const totalSaved = getTotalSaved();
+  const target = state.data.savingsTarget || 0;
+  const pct = target > 0 ? Math.min(1, totalSaved / target) : 0;
+  const milestones = Math.floor(pct * 5 + 0.0001);
+  const recent = [...monthTx].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 8);
+
+  const quickCats = state.ui.quickType === "expense" ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+
+  return (
+    '<div class="card">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+        '<div class="section-title">Quick log</div>' +
+        (state.ui.justLogged ? '<span style="font-size:12px;color:var(--jade);font-weight:600;">' + fmt(state.ui.justLogged) + " added</span>" : "") +
+      "</div>" +
+      '<div class="toggle-row">' +
+        '<button class="toggle-btn ' + (state.ui.quickType === "expense" ? "active" : "") + '" data-quick-type="expense">Money out</button>' +
+        '<button class="toggle-btn ' + (state.ui.quickType === "income" ? "active" : "") + '" data-quick-type="income">Money in</button>' +
+      "</div>" +
+      '<input class="input" type="number" id="quick-amount" placeholder="Enter amount, then tap a category below" value="' + escapeHtml(state.ui.quickAmount) + '" style="margin-bottom:10px;" />' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;">' +
+        quickCats.map((c) => '<button class="chip" data-quick-cat="' + escapeHtml(c) + '">' + escapeHtml(c) + "</button>").join("") +
+      "</div>" +
+      '<div style="font-size:11.5px;color:var(--ink-faint);margin-top:8px;">Need a date or note instead? Use the Add tab below.</div>' +
+    "</div>" +
+
+    '<div class="card">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+        '<div class="section-title">Savings goal</div>' +
+        '<button class="link-btn" id="edit-target">' + (target ? "Edit" : "Set goal") + "</button>" +
+      "</div>" +
+      (state.ui.targetEditing ?
+        '<div style="display:flex;gap:8px;margin-bottom:12px;">' +
+          '<input class="input" type="number" id="target-input" placeholder="Target amount" value="' + escapeHtml(state.ui.targetInput) + '" />' +
+          '<button class="btn-primary" id="save-target">Save</button>' +
+        "</div>" : "") +
+      '<div style="display:flex;gap:8px;margin-bottom:10px;">' +
+        FLAG_COLORS.map((c, i) =>
+          '<div style="flex:1;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;' +
+            (i < milestones ? "background:" + c + ";box-shadow:0 0 14px " + c + "55;" : "border:1px dashed var(--line);") + '">' +
+            (i < milestones ? '<span style="color:#0C1220;font-weight:700;">&#10003;</span>' : "") +
+          "</div>"
+        ).join("") +
+      "</div>" +
+      '<div style="font-size:13px;color:var(--ink-soft);">' +
+        (target > 0 ? fmt(totalSaved) + " saved toward " + fmt(target) + " (" + Math.round(pct * 100) + "%)" : fmt(totalSaved) + " saved so far. Set a goal to track progress.") +
+      "</div>" +
+    "</div>" +
+
+    '<div class="card">' +
+      '<div class="section-title">Where it went this month</div>' +
+      (byCategory.length === 0 ? '<div style="font-size:13px;color:var(--ink-soft);">No spending logged yet.</div>' :
+        '<div style="display:flex;flex-direction:column;gap:8px;">' +
+          byCategory.map(([cat, amt]) => {
+            const over = state.data.budgets[cat] && amt > state.data.budgets[cat];
+            return '<div>' +
+              '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px;">' +
+                "<span>" + escapeHtml(cat) + '</span><span class="mono" style="color:' + (over ? "var(--rust)" : "var(--ink)") + ';">' + fmt(amt) + "</span>" +
+              "</div>" +
+              '<div style="height:7px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;">' +
+                '<div style="width:' + Math.min(100, (amt / maxCat) * 100) + "%;height:100%;background:" + (over ? "var(--rust)" : "var(--jade)") + ';"></div>' +
+              "</div>" +
+            "</div>";
+          }).join("") +
+        "</div>") +
+    "</div>" +
+
+    '<div class="card">' +
+      '<div class="section-title">Recent entries</div>' +
+      (recent.length === 0 ? '<div style="font-size:13px;color:var(--ink-soft);">Nothing logged this month yet.</div>' :
+        recent.map((t) =>
+          '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);">' +
+            '<div><div style="font-size:13.5px;">' + escapeHtml(t.category) + (t.note ? " — " + escapeHtml(t.note) : "") + '</div>' +
+            '<div style="font-size:11.5px;color:var(--ink-faint);">' + escapeHtml(t.date) + "</div></div>" +
+            '<div style="display:flex;align-items:center;gap:10px;">' +
+              '<span class="mono" style="font-size:13.5px;color:' + (t.type === "income" ? "var(--jade)" : "var(--ink)") + ';">' + (t.type === "income" ? "+" : "-") + fmt(t.amount) + "</span>" +
+              '<button class="icon-btn" data-delete-tx="' + t.id + '">&#10005;</button>' +
+            "</div>" +
+          "</div>"
+        ).join("")) +
+    "</div>"
+  );
+}
+
+function renderAddEntry() {
+  const cats = state.ui.addType === "expense" ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+  return (
+    '<div class="card">' +
+      '<div class="section-title">Log an entry (with date & note)</div>' +
+      '<div class="toggle-row">' +
+        '<button class="toggle-btn ' + (state.ui.addType === "expense" ? "active" : "") + '" data-add-type="expense">Money out</button>' +
+        '<button class="toggle-btn ' + (state.ui.addType === "income" ? "active" : "") + '" data-add-type="income">Money in</button>' +
+      "</div>" +
+      '<label style="font-size:12.5px;color:var(--ink-soft);display:block;margin-bottom:5px;">Amount (Nu.)</label>' +
+      '<input class="input" type="number" id="add-amount" placeholder="0" value="' + escapeHtml(state.ui.addAmount) + '" style="margin-bottom:12px;" />' +
+      '<label style="font-size:12.5px;color:var(--ink-soft);display:block;margin-bottom:5px;">Category</label>' +
+      '<select class="input" id="add-category" style="margin-bottom:12px;">' +
+        cats.map((c) => '<option value="' + escapeHtml(c) + '" ' + (c === state.ui.addCategory ? "selected" : "") + ">" + escapeHtml(c) + "</option>").join("") +
+      "</select>" +
+      '<label style="font-size:12.5px;color:var(--ink-soft);display:block;margin-bottom:5px;">Date</label>' +
+      '<input class="input" type="date" id="add-date" value="' + escapeHtml(state.ui.addDate) + '" style="margin-bottom:12px;" />' +
+      '<label style="font-size:12.5px;color:var(--ink-soft);display:block;margin-bottom:5px;">Note (optional)</label>' +
+      '<input class="input" type="text" id="add-note" placeholder="e.g. lunch with friends" value="' + escapeHtml(state.ui.addNote) + '" style="margin-bottom:16px;" />' +
+      '<button class="btn-primary" id="add-submit" style="width:100%;">Save entry</button>' +
+    "</div>"
+  );
+}
+
+function renderBudgets() {
+  const spentMap = Object.fromEntries(getByCategory(getMonthTx()));
+  return (
+    '<div class="card">' +
+      '<div class="section-title">Monthly budgets</div>' +
+      '<div style="font-size:13px;color:var(--ink-soft);margin-bottom:14px;">Set a limit for each category. The dashboard turns rust colored when you go over.</div>' +
+      '<div style="display:flex;flex-direction:column;gap:14px;">' +
+        EXPENSE_CATEGORIES.map((cat) => {
+          const limit = state.data.budgets[cat] || 0;
+          const spent = spentMap[cat] || 0;
+          const pct = limit > 0 ? Math.min(1, spent / limit) : 0;
+          const over = limit > 0 && spent > limit;
+          return '<div>' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+              "<span style=\"font-size:13.5px;\">" + escapeHtml(cat) + "</span>" +
+              '<input type="number" class="budget-input" data-cat="' + escapeHtml(cat) + '" value="' + (limit || "") + '" placeholder="No limit" style="width:90px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,0.05);color:var(--ink);font-size:12.5px;text-align:right;" />' +
+            "</div>" +
+            (limit > 0 ?
+              '<div style="height:6px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;">' +
+                '<div style="width:' + (pct * 100) + "%;height:100%;background:" + (over ? "var(--rust)" : "var(--jade)") + ';"></div></div>' +
+              '<div style="font-size:11.5px;color:' + (over ? "var(--rust)" : "var(--ink-faint)") + ';margin-top:2px;">' + fmt(spent) + " of " + fmt(limit) + (over ? " — over budget" : "") + "</div>"
+              : "") +
+          "</div>";
+        }).join("") +
+      "</div>" +
+    "</div>"
+  );
+}
+
+function renderReminders() {
+  const unpaidCount = state.data.reminders.filter((r) => !r.paid).length;
+  const sorted = [...state.data.reminders].sort((a, b) => (a.paid !== b.paid ? (a.paid ? 1 : -1) : a.dueDate.localeCompare(b.dueDate)));
+
+  let html = '<div class="card" style="background:var(--indigo-soft);border:1px solid rgba(150,166,255,0.35);">' +
+    '<div style="font-size:12.5px;line-height:1.5;">This app can only alert you while it\'s open in a browser tab. For a reminder that reaches you even when it\'s closed, export your bills to your phone\'s own calendar.</div>' +
+    '<button class="btn-primary" id="export-ics" style="margin-top:10px;" ' + (unpaidCount === 0 ? "disabled" : "") + '>Export ' + (unpaidCount > 0 ? unpaidCount : "") + " bill" + (unpaidCount === 1 ? "" : "s") + " to calendar (.ics)</button>" +
+  "</div>";
+
+  if (state.notifPermission !== "granted" && state.notifPermission !== "unsupported") {
+    html += '<div class="card" style="background:var(--marigold-soft);border:1px solid rgba(255,203,107,0.35);">' +
+      '<div style="font-size:13px;margin-bottom:8px;">Turn on in-tab notifications, which fire while this app is open in a browser tab.</div>' +
+      '<button class="btn-primary" id="enable-notif" style="background:linear-gradient(160deg,rgba(255,203,107,0.9),rgba(255,190,90,0.8));box-shadow:0 4px 16px var(--marigold-glow);">Enable notifications</button>' +
+    "</div>";
+  }
+
+  html += '<div class="card">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:' + (state.ui.reminderFormOpen ? "14px" : "0") + ';">' +
+      '<div class="section-title">Bills & reminders</div>' +
+      '<button class="link-btn" id="toggle-reminder-form">' + (state.ui.reminderFormOpen ? "Cancel" : "Add reminder") + "</button>" +
+    "</div>";
+  if (state.ui.reminderFormOpen) {
+    html += '<div style="display:flex;flex-direction:column;gap:10px;">' +
+      '<input class="input" type="text" id="rem-title" placeholder="e.g. Electricity bill" value="' + escapeHtml(state.ui.remTitle) + '" />' +
+      '<div style="display:flex;gap:8px;">' +
+        '<input class="input" type="number" id="rem-amount" placeholder="Amount (optional)" value="' + escapeHtml(state.ui.remAmount) + '" />' +
+        '<input class="input" type="date" id="rem-date" value="' + escapeHtml(state.ui.remDueDate) + '" />' +
+      "</div>" +
+      '<label style="font-size:13px;display:flex;align-items:center;gap:6px;color:var(--ink-soft);"><input type="checkbox" id="rem-recurring" ' + (state.ui.remRecurring ? "checked" : "") + " /> Repeats monthly</label>" +
+      '<button class="btn-primary" id="rem-submit">Save reminder</button>' +
+    "</div>";
+  }
+  html += "</div>";
+
+  if (sorted.length === 0) {
+    html += '<div class="card"><div style="font-size:13px;color:var(--ink-soft);">No bills tracked yet. Add one above so nothing catches you off guard.</div></div>';
+  } else {
+    sorted.forEach((r) => {
+      const d = daysUntil(r.dueDate);
+      const overdue = !r.paid && d < 0;
+      const dueToday = !r.paid && d === 0;
+      html += '<div class="card" style="opacity:' + (r.paid ? 0.55 : 1) + ";border:1px solid " + (overdue ? "rgba(255,155,118,0.5)" : dueToday ? "rgba(255,203,107,0.5)" : "var(--line)") + ';display:flex;align-items:center;justify-content:space-between;">' +
+        '<div><div style="font-size:14px;font-weight:600;' + (r.paid ? "text-decoration:line-through;" : "") + '">' + escapeHtml(r.title) + "</div>" +
+        '<div style="font-size:12px;color:' + (overdue ? "var(--rust)" : "var(--ink-faint)") + ';">' +
+          (r.amount > 0 ? fmt(r.amount) + " · " : "") +
+          (r.paid ? "Paid" : overdue ? "Overdue by " + Math.abs(d) + " day" + (Math.abs(d) > 1 ? "s" : "") : dueToday ? "Due today" : "Due " + r.dueDate) +
+          (r.recurring ? " · repeats" : "") +
+        "</div></div>" +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+          (r.paid ?
+            '<div style="font-size:10px;font-weight:700;color:var(--rust);border:2px solid var(--rust);border-radius:6px;padding:2px 6px;transform:rotate(-8deg);">PAID</div>' :
+            '<button class="btn-primary" data-mark-paid="' + r.id + '" style="padding:6px 12px;font-size:12.5px;background:linear-gradient(160deg,rgba(107,217,168,0.9),rgba(90,210,160,0.75));box-shadow:0 4px 14px var(--jade-glow);color:#0E2A1F;">Mark paid</button>') +
+          '<button class="icon-btn" data-delete-rem="' + r.id + '">&#10005;</button>' +
+        "</div>" +
+      "</div>";
+    });
+  }
+  return html;
+}
+
+// ---------- events ----------
+function attachHandlers() {
+  const $ = (id) => document.getElementById(id);
+  const on = (sel, evt, fn) => document.querySelectorAll(sel).forEach((el) => el.addEventListener(evt, fn));
+
+  document.querySelectorAll("[data-tab]").forEach((el) => el.addEventListener("click", () => { state.tab = el.dataset.tab; render(); }));
+  const reviewBtn = $("review-bills"); if (reviewBtn) reviewBtn.addEventListener("click", () => { state.tab = "reminders"; render(); });
+  const monthPrev = $("month-prev"); if (monthPrev) monthPrev.addEventListener("click", () => { state.viewMonth = addMonths(state.viewMonth, -1); render(); });
+  const monthNext = $("month-next"); if (monthNext) monthNext.addEventListener("click", () => { state.viewMonth = addMonths(state.viewMonth, 1); render(); });
+  const resetBtn = $("reset-btn"); if (resetBtn) resetBtn.addEventListener("click", () => { if (confirm("Clear all data? This cannot be undone.")) resetAll(); });
+
+  // Quick log
+  on("[data-quick-type]", "click", (e) => { state.ui.quickType = e.currentTarget.dataset.quickType; render(); });
+  const quickAmount = $("quick-amount"); if (quickAmount) quickAmount.addEventListener("input", (e) => { state.ui.quickAmount = e.target.value; });
+  on("[data-quick-cat]", "click", (e) => {
+    const cat = e.currentTarget.dataset.quickCat;
+    const amt = Number(state.ui.quickAmount);
+    if (!amt || amt <= 0) { const el = $("quick-amount"); if (el) el.focus(); return; }
+    addTransaction({ type: state.ui.quickType, amount: amt, category: cat, note: "", date: todayStr() });
+    state.ui.justLogged = amt;
+    state.ui.quickAmount = "";
+    setTimeout(() => { state.ui.justLogged = null; render(); }, 1800);
+  });
+
+  // Savings goal
+  const editTarget = $("edit-target"); if (editTarget) editTarget.addEventListener("click", () => {
+    state.ui.targetEditing = !state.ui.targetEditing;
+    state.ui.targetInput = state.data.savingsTarget || "";
+    render();
+  });
+  const targetInput = $("target-input"); if (targetInput) targetInput.addEventListener("input", (e) => { state.ui.targetInput = e.target.value; });
+  const saveTarget = $("save-target"); if (saveTarget) saveTarget.addEventListener("click", () => {
+    setSavingsTarget(Number(state.ui.targetInput) || 0);
+    state.ui.targetEditing = false;
+  });
+
+  // Delete transaction
+  on("[data-delete-tx]", "click", (e) => deleteTransaction(e.currentTarget.dataset.deleteTx));
+
+  // Add entry tab
+  on("[data-add-type]", "click", (e) => { state.ui.addType = e.currentTarget.dataset.addType; state.ui.addCategory = (state.ui.addType === "expense" ? EXPENSE_CATEGORIES : INCOME_CATEGORIES)[0]; render(); });
+  const addAmount = $("add-amount"); if (addAmount) addAmount.addEventListener("input", (e) => { state.ui.addAmount = e.target.value; });
+  const addCategory = $("add-category"); if (addCategory) addCategory.addEventListener("change", (e) => { state.ui.addCategory = e.target.value; });
+  const addDate = $("add-date"); if (addDate) addDate.addEventListener("input", (e) => { state.ui.addDate = e.target.value; });
+  const addNote = $("add-note"); if (addNote) addNote.addEventListener("input", (e) => { state.ui.addNote = e.target.value; });
+  const addSubmit = $("add-submit"); if (addSubmit) addSubmit.addEventListener("click", () => {
+    const amt = Number(state.ui.addAmount);
+    if (!amt || amt <= 0) return;
+    addTransaction({ type: state.ui.addType, amount: amt, category: state.ui.addCategory, note: state.ui.addNote.trim(), date: state.ui.addDate });
+    state.ui.addAmount = ""; state.ui.addNote = "";
+    state.tab = "dashboard";
+  });
+
+  // Budgets
+  document.querySelectorAll(".budget-input").forEach((el) => el.addEventListener("blur", (e) => {
+    setBudget(e.target.dataset.cat, Number(e.target.value) || 0);
+  }));
+
+  // Reminders
+  const exportBtn = $("export-ics"); if (exportBtn) exportBtn.addEventListener("click", () => downloadICS(state.data.reminders));
+  const enableNotif = $("enable-notif"); if (enableNotif) enableNotif.addEventListener("click", requestNotif);
+  const toggleForm = $("toggle-reminder-form"); if (toggleForm) toggleForm.addEventListener("click", () => { state.ui.reminderFormOpen = !state.ui.reminderFormOpen; render(); });
+  const remTitle = $("rem-title"); if (remTitle) remTitle.addEventListener("input", (e) => { state.ui.remTitle = e.target.value; });
+  const remAmount = $("rem-amount"); if (remAmount) remAmount.addEventListener("input", (e) => { state.ui.remAmount = e.target.value; });
+  const remDate = $("rem-date"); if (remDate) remDate.addEventListener("input", (e) => { state.ui.remDueDate = e.target.value; });
+  const remRecurring = $("rem-recurring"); if (remRecurring) remRecurring.addEventListener("change", (e) => { state.ui.remRecurring = e.target.checked; });
+  const remSubmit = $("rem-submit"); if (remSubmit) remSubmit.addEventListener("click", () => {
+    if (!state.ui.remTitle.trim()) return;
+    addReminder({ title: state.ui.remTitle.trim(), amount: Number(state.ui.remAmount) || 0, dueDate: state.ui.remDueDate, recurring: state.ui.remRecurring });
+    state.ui.remTitle = ""; state.ui.remAmount = ""; state.ui.reminderFormOpen = false;
+  });
+  on("[data-mark-paid]", "click", (e) => togglePaid(e.currentTarget.dataset.markPaid));
+  on("[data-delete-rem]", "click", (e) => deleteReminder(e.currentTarget.dataset.deleteRem));
+}
+
+// ---------- boot ----------
+async function boot() {
+  const cached = readLocalCache();
+  if (cached) state.data = cached;
+  state.loading = false;
+  render();
+  await syncFromServer(false);
+
+  setInterval(() => syncFromServer(false), CONFIG.POLL_MS);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") syncFromServer(false); });
+  window.addEventListener("focus", () => syncFromServer(false));
+  setInterval(checkDueNotifications, 60000);
+}
+
+boot();
+</script>
+</body>
+</html>
