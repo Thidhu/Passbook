@@ -116,6 +116,29 @@
   }
   .content { padding: 20px 20px 8px; }
   ::-webkit-scrollbar { width: 0; height: 0; }
+
+  .balance-figure {
+    font-family: var(--serif);
+    font-size: 40px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  .balance-figure.pos {
+    color: var(--ink);
+    animation: glowPulsePos 2.6s ease-in-out infinite;
+  }
+  .balance-figure.neg {
+    color: var(--rust);
+    animation: glowPulseNeg 2.6s ease-in-out infinite;
+  }
+  @keyframes glowPulsePos {
+    0%, 100% { text-shadow: 0 0 14px rgba(150,166,255,0.45), 0 0 32px rgba(150,166,255,0.20); }
+    50% { text-shadow: 0 0 26px rgba(150,166,255,0.85), 0 0 56px rgba(150,166,255,0.40); }
+  }
+  @keyframes glowPulseNeg {
+    0%, 100% { text-shadow: 0 0 14px rgba(255,155,118,0.45), 0 0 32px rgba(255,155,118,0.20); }
+    50% { text-shadow: 0 0 26px rgba(255,155,118,0.85), 0 0 56px rgba(255,155,118,0.40); }
+  }
 </style>
 </head>
 <body>
@@ -430,7 +453,7 @@ function renderHeader(income, expense, balance) {
         '<button class="nav-chip" id="month-next">&#8594;</button>' +
       "</div>" +
       '<div style="font-family:var(--serif);font-size:12px;color:var(--ink-soft);margin-bottom:4px;">Balance remaining</div>' +
-      '<div class="mono" style="font-size:38px;font-weight:600;color:' + (balance < 0 ? "var(--rust)" : "var(--ink)") + ';">' + fmt(balance) + "</div>" +
+      '<div class="balance-figure ' + (balance < 0 ? "neg" : "pos") + '">' + fmt(balance) + "</div>" +
       '<div style="display:flex;gap:10px;margin-top:14px;">' +
         '<div class="pill jade">In <span class="mono" style="font-weight:600;">' + fmt(income) + "</span></div>" +
         '<div class="pill rust">Out <span class="mono" style="font-weight:600;">' + fmt(expense) + "</span></div>" +
